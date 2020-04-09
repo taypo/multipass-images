@@ -1,0 +1,96 @@
+{
+    "builders": [
+        {
+            "type": "qemu",
+            "iso_url": "http://cloud-images.ubuntu.com/releases/bionic/release/ubuntu-18.04-server-cloudimg-amd64.img",
+            "iso_checksum_url": "http://cloud-images.ubuntu.com/releases/bionic/release/SHA256SUMS",
+            "iso_checksum_type": "sha256",
+            "disk_image": true,
+            "disk_size": 5120,
+            "disk_interface": "virtio-scsi",
+            "disk_discard": "unmap",
+            "ssh_username": "packer",
+            "ssh_password": "packerpassword",
+            "http_directory": "cloud-data",
+            "disk_compression": true,
+            "qemuargs": [
+                ["-smbios", "type=1,serial=ds=nocloud-net;instance-id=packer;seedfrom=http://{{ .HTTPIP }}:{{ .HTTPPort }}/"]
+            ],
+            "use_default_display": true
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "file",
+            "source": "nomad.hcl",
+            "destination": "/tmp/nomad.hcl"
+        },
+        {
+            "type": "file",
+            "source": "consul.hcl",
+            "destination": "/tmp/consul.hcl"
+        },
+        {
+            "type": "file",
+            "source": "nomad.service",
+            "destination": "/tmp/nomad.service"
+        },
+        {
+            "type": "file",
+            "source": "consul.service",
+            "destination": "/tmp/consul.service"
+        },
+        {
+            "type": "shell",
+            "inline": ["sudo apt-get update",
+                       "sudo apt-get install unzip curl vim -y",
+                       "sudo mkdir -p /data/nomad",
+                       "sudo mkdir -p /data/consul",
+                       "export NOMAD_VERSION=0.10.4",
+                       "cd /tmp/",
+                       "curl -sSL https://releases.hashicorp.com/nomad/${NOMAD_VERSION}/nomad_${NOMAD_VERSION}_linux_amd64.zip -o nomad.zip",
+                       "unzip nomad.zip",
+                       "sudo install nomad /usr/bin/nomad",
+                       "sudo mkdir -p /etc/nomad.d",
+                       "sudo cp /tmp/nomad.hcl /etc/nomad.d/nomad.hcl",
+                       "sudo cp /tmp/nomad.service /etc/systemd/system/",
+                       "sudo systemctl enable nomad.service",
+
+                       "export CONSUL_VERSION=1.6.4",
+                       "curl -sSL https://releases.hashicorp.com/consul/${CONSUL_VERSION}/consul_${CONSUL_VERSION}_linux_amd64.zip > consul.zip",
+                       "unzip /tmp/consul.zip",
+                       "sudo install consul /usr/bin/consul",
+                       "sudo mkdir -p /etc/consul.d",
+                       "sudo cp /tmp/consul.hcl /etc/consul.d/consul.hcl",
+                       "sudo cp /tmp/consul.service /etc/systemd/system/",
+                       "sudo systemctl enable consul.service"
+
+                    ]
+        },
+
+        {
+            "type": "shell",
+            "execute_command": "sudo sh -c '{{ .Vars }} {{ .Path }}'",
+            "remote_folder": "/tmp",
+            "inline": [
+                "/usr/bin/apt-get clean",
+                "rm -r /etc/apparmor.d/cache/* /etc/apparmor.d/cache/.features /etc/netplan/50-cloud-init.yaml /etc/ssh/ssh_host* /etc/sudoers.d/90-cloud-init-users",
+                "/usr/bin/truncate --size 0 /etc/machine-id",
+                "/usr/bin/gawk -i inplace '/PasswordAuthentication/ { gsub(/yes/, \"no\") }; { print }' /etc/ssh/sshd_config",
+                "rm -r /root/.ssh",
+                "rm /snap/README",
+                "find /usr/share/netplan -name __pycache__ -exec rm -r {} +",
+                "rm /var/cache/pollinate/seeded /var/cache/snapd/* /var/cache/motd-news",
+                "rm -r /var/lib/cloud /var/lib/dbus/machine-id /var/lib/private /var/lib/systemd/timers /var/lib/systemd/timesync /var/lib/systemd/random-seed",
+                "rm /var/lib/ubuntu-release-upgrader/release-upgrade-available",
+                "rm /var/lib/update-notifier/fsck-at-reboot /var/lib/update-notifier/hwe-eol",
+                "find /var/log -type f -exec rm {} +",
+                "rm -r /tmp/* /tmp/.*-unix /var/tmp/*",
+                "rm -r /home/packer",
+                "/bin/sync",
+                "/sbin/fstrim -v /"
+            ]
+        }
+    ]
+}
+
