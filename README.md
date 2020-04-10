@@ -1,8 +1,18 @@
-# multipass-images
-My custom [multipass](https://multipass.run/) images for local development and testing use
+# Custom Multipass Images
+My custom [multipass](https://multipass.run/) images for local development and testing use. If you don't want to use the binaries, or you need to customize more, you can build the images yourself using [packer](https://packer.io/). 
+
+Example:
+```
+cd nomad-client
+packer build template.json
+multipass launch file://$PWD/output-qemu/packer-qemu
+```
+A more detailed procedure can be found [in this post](https://discourse.ubuntu.com/t/building-multipass-images-with-packer/12361)
+
 
 ## Nomad
-Create a local nomad cluster. These images also include consul. Currently only supports one server and multiple clients.
+These two images can be used to create a local nomad cluster. They also include consul. Currently only supports one server and multiple clients.
+
 Steps to run:
 
 ```
@@ -15,7 +25,7 @@ cloudinit.yml:
 ```yaml
 write_files:
 -   content: |
-        retry_join = ["10.215.117.75"]
+        retry_join = ["put your nomad server ip between these quotes"]
     path: /etc/consul.d/join.hcl
 ```
 
