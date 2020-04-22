@@ -19,7 +19,7 @@ Steps to run:
 multipass launch https://img.taypo.com/nomad-server.img --name NomadServer
 ```
 
-Get the IP address of the server from `multipass list`. Create the following file, and replace the IP with the IP of the server you just created.
+Get the IP address of the server from `multipass info NomadServer`. Create the following file, and replace the IP with the IP of the server you just created.
 
 cloudinit.yml:
 ```yaml
