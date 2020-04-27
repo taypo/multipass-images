@@ -1,4 +1,0 @@
-write_files:
--   content: |
-        retry_join = ["10.215.117.75"]
-    path: /etc/consul.d/join.hcl

@@ -2,9 +2,9 @@
 TODO:
 
 "for i in group gshadow passwd shadow subuid subgid; do mv /etc/$i- /etc/$i; done",
-    bu satırı kaldırdık. docker gurubunu sililyordu. aynı zamanda silmesi gereken packer gurubunu ise silmiyor.
+    replace with the recommendation from https://discourse.ubuntu.com/t/building-multipass-images-with-packer/12361/8
 
-systemd dosyalarını dokümantasyondan alalım:
+update systemd files from the official documentation:
     https://nomadproject.io/docs/install/production/deployment-guide/
     https://learn.hashicorp.com/consul/datacenter-deploy/deployment-guide
 
